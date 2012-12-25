@@ -1,0 +1,18 @@
+{
+	"name": "Page Note",
+	"description": "Add note on every web page.",
+	"version": "1.0",
+	"manifest_version": 2,
+	"icons": {
+		"128": "icons/icon_128.png",
+		"48": "icons/icon_48.png",
+		"16": "icons/icon_16.png"
+	},
+	"browser_action": {
+		"default_title": "Page Note",
+		"default_icon": {
+			"19": "icons/icon_19.png",
+			"38": "icons/icon_38.png"
+		},
+	}
+}
