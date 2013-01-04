@@ -3,34 +3,22 @@
   "description": "Add note on every web page.",
   "version": "1.0",
   "manifest_version": 2,
-  "permissions": ["tabs"],
-  "background": {
-    "scripts": ["background.js"]  
-  },
+  "permissions": ["tabs", "<all_urls>"],
+  "background": {"page": "background.html"},
   "icons": {
     "128": "icons/icon_128.png",
     "48": "icons/icon_48.png",
     "16": "icons/icon_16.png"
   },
-  "commands": {
-    "toggle-pinned": {
-      "suggested_key": {
-        "default": "Ctrl+Shift+Y",
-        "windows": "Ctrl+Shift+Y",
-        "mac": "Command+Shift+Y",
-        "linux": "Ctrl+Shift+Y",
-        "chromeos": "Ctrl+Shift+Y"
-      },
-      "description": "Pin the tab."
-    }
-  },
   "content_scripts": [
     {
       "matches": ["*://*/*"],
       "js": [
-        "content_script.js"
+        "content-scripts/js/page-note.js"
       ],
-      "css": ["css/page-note.css"]
+      "css": [
+        "content-scripts/css/page-note.css"
+      ]
     }
   ],
   "browser_action": {
