@@ -28,9 +28,13 @@
 //     // if (request.greeting == "hello") sendResponse({farewell: "goodbye"});
 // });
 
-var jQuery  = require("jqueryify");
-var exports = this;
-jQuery(function(){
-  var App = require("background");
-  exports.app = new App;
-});
+// var jQuery  = require("jqueryify");
+// var exports = this;
+// jQuery(function(){
+//   var App = require("background");
+//   exports.app = new App;
+// });
+
+    var exports = this;
+    var Background = require("background");
+    exports.background = new Background;
