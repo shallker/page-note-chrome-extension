@@ -1,7 +1,7 @@
 Spine = require('spine')
 
 class Note extends Spine.Model
-  @configure 'Note', 'docid', 'name', 'time'
+  @configure 'Note', 'id', 'index', 'content', 'url', 'time'
 
   @extend Spine.Model.Local
   
