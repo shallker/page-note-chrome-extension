@@ -816,3 +816,5 @@
         define(Mousetrap);
     }
 }) ();
+
+module.exports = Mousetrap
