@@ -9,18 +9,26 @@ class ChromeTabs
     chrome.tabs.create url: url
 
   @listenUpdate: (listener)->
-     chrome.tabs.onUpdated.addListener(listener)
+     chrome.tabs.onUpdated.addListener listener
 
   @listenCreate: (listener)->
-    chrome.tabs.onCreated.addListener(listener)
+    chrome.tabs.onCreated.addListener listener
 
   @lisenActive: (listener)->
-    chrome.tabs.onActivated.addListener(listener)
+    chrome.tabs.onActivated.addListener listener
 
   @getSelected: (listener)->
-    chrome.tabs.getSelected(null, listener)
+    chrome.tabs.getSelected null, listener
 
   @getCurrent: ->
     chrome.tabs.getCurrent()
+
+  @injectScript: (tabId = null, file)->
+    console.log tabId, file
+    chrome.tabs.executeScript tabId, file: file
+
+  @injectStyle: (tabId = null, file)->
+    console.log tabId, file
+    chrome.tabs.insertCSS tabId, file: file
 
 module.exports = ChromeTabs
