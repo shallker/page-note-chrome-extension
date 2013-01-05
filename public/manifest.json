@@ -19,7 +19,7 @@
         "content-scripts/js/page-note.js"
       ],
       "css": [
-        "content-scripts/css/page-note.css"
+        "content-scripts/css/page-note-scale.css"
       ]
     }
   ],

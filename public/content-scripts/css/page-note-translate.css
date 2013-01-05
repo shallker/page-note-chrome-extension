@@ -1,0 +1,100 @@
+/* Page Note style - scale version */
+
+html.page-note-init {
+  overflow-x: hidden;
+  -webkit-transition-duration: 0.2s;
+  -webkit-transition-property: -webkit-transform;
+  -webkit-transition-timing-function: cubic-bezier(0.250, 0.460, 0.450, 0.940);
+}
+
+html.page-note-open {
+  -webkit-transform: translateX(300px);
+}
+
+body {
+  /*-webkit-transition: 0.2s -webkit-transform cubic-bezier(0.250, 0.460, 0.450, 0.940);*/
+  /*-webkit-transition-duration: 0.2s;*/
+  /*-webkit-transition-property: -webkit-transform;*/
+  /*-webkit-transition-timing-function: cubic-bezier(0.250, 0.460, 0.450, 0.940);*/
+  /*width: 100%;*/
+}
+
+.page-note-open body {
+  /*-webkit-transform: translateX(300px);*/
+  /*-webkit-transform: translate3d(300px, 0, 0);*/
+  /*width: 80%;*/
+}
+
+.page-note {
+  /*opacity: 0.5;*/
+  /*-webkit-transform-origin-x: 100%;*/
+  -webkit-transform: translateX(-300px);
+  /*-webkit-transform: translateX(-100%) rotateY(90deg);*/
+  /*-webkit-transition: 0.2s all cubic-bezier(0.250, 0.460, 0.450, 0.940);*/
+}
+
+.page-note-open .page-note {
+  /*opacity: 1;*/
+  /*-webkit-transform: translateX(-100%);*/
+  /*-webkit-transform: translateX(-100%) rotateY(0deg);*/
+}
+
+#page-note {
+  background-color: rgb(245, 245, 245);
+  position: absolute;
+  width: 300px;
+  height: 100%;
+  z-index: -1;
+  left: 0;
+  top: 0;
+  text-align: center;
+}
+
+#page-note input.note-title {
+  margin: 0;
+  outline: 0;
+  border: 1px solid #DDD;
+  width: 88%;
+  margin-top: 10px;
+  padding: 4px;
+  font-size: 12px;
+  font-family: Arial;
+  color: #AAA;
+  height: 14px;
+  line-height: 14px;
+  box-shadow: 0 0 0 0;
+  box-sizing: content-box;
+  border-radius: 0;
+}
+
+#page-note input.note-title:focus {
+  outline: 0;
+  box-shadow: 0 0 0 0;
+  border: 1px solid #DDD;
+}
+
+#page-note textarea.note-content {
+  margin:0;
+  outline: 0;
+  width: 88%;
+  max-width: 88%;
+  height: 88%;
+  max-height: 88%;
+  background-color: white;
+  padding: 4px;
+  margin-top: 10px;
+  border: 1px solid #DDD;
+  font-size: 12px;
+  font-family: Arial;
+  box-sizing: content-box;
+  border-radius: 0;
+  box-shadow: 0 0 0 0;
+  line-height: normal;
+  color: #555555;
+}
+
+#page-note textarea.note-content:focus {
+  outline: 0;
+  box-shadow: 0 0 0 0;
+  border: 1px solid #DDD;
+}
