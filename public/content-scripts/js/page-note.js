@@ -3,7 +3,7 @@ if (pageUrl == 'http://www.baidu.com/search/error.html') {
     alert('has page note');
 }
 
-Mousetrap.bind('ctrl+`', openPageNote);
+Mousetrap.bind('`', openPageNote);
 
 function openPageNote() {
   $('#page-note').toggle();
