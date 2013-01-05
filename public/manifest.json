@@ -10,17 +10,19 @@
     "48": "icons/icon_48.png",
     "16": "icons/icon_16.png"
   },
-  // "content_scripts": [
-  //   {
-  //     "matches": ["*://*/*"],
-  //     "js": [
-  //       "content-scripts/js/page-note.js"
-  //     ],
-  //     "css": [
-  //       "content-scripts/css/page-note.css"
-  //     ]
-  //   }
-  // ],
+  "content_scripts": [
+    {
+      "matches": ["*://*/*"],
+      "js": [
+        "content-scripts/js/jquery.js",
+        "content-scripts/js/mousetrap.js",
+        "content-scripts/js/page-note.js"
+      ],
+      "css": [
+        "content-scripts/css/page-note.css"
+      ]
+    }
+  ],
   "page_action": {
     "default_icon": {                   
       "19": "icons/icon_19.png",        
