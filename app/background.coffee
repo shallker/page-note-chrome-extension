@@ -81,7 +81,7 @@ class Background extends Spine.Controller
     # ChromeTabs.injectScript tabId, 'content-scripts/js/mousetrap.js'
     # ChromeTabs.injectScript tabId, 'content-scripts/js/page-note.js'
     ChromeTabs.injectScript tabId, 'application.js'
-    ChromeTabs.injectScript tabId, 'js/web-app.js'
+    ChromeTabs.injectScript tabId, 'js/page-app.js'
 
   onTabUpdate: (tabId, changeInfo, tab)=>
     # @log changeInfo, tab

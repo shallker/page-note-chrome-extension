@@ -3,7 +3,7 @@ require('lib/setup')
 Spine = require('spine')
 Notes = require 'controllers/notes'
 
-class Web extends Spine.Controller
+class Page extends Spine.Controller
 
   el: document.body
   html: document.documentElement
@@ -15,4 +15,4 @@ class Web extends Spine.Controller
     @notes = new Notes(url)
     @append @notes
 
-module.exports = Web
+module.exports = Page
