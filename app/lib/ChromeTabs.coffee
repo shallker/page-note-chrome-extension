@@ -14,7 +14,7 @@ class ChromeTabs
   @listenCreate: (listener)->
     chrome.tabs.onCreated.addListener listener
 
-  @lisenActive: (listener)->
+  @listenActive: (listener)->
     chrome.tabs.onActivated.addListener listener
 
   @getSelected: (listener)->
