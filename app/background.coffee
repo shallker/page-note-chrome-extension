@@ -26,9 +26,10 @@ class Background extends Spine.Controller
     # insertnt = => @log 'insert failed'
     # couch.insert 'my_id', name: 'Jack', insert, insertnt
 
-
   running: ->
     ChromeTabs.listenUpdate @onTabUpdate
+    ChromeTabs.listenActive @onTabActive
+    ChromeTabs.listenCreate @onTabCreate
     BrowserAction.listenClick @onClick
     ChromeExtension.listenMessage @onMessage
     Note.fetch()
@@ -42,18 +43,13 @@ class Background extends Spine.Controller
 
   onPageGetNote: (request, sendBack)=>
     id = MD5 request.url
-    if Note.exists id
-    then note = Note.find id
-    else note = @newNote id, request.url
-    sendBack note
-
-  newNote: (id, url)->
+    return sendBack Note.find id if Note.exists id
     now = new Date
-    Note.create
+    sendBack Note.create
       id: id
       index: ''
       content: ''
-      url: url
+      url: request.url
       time: now.getTime()
 
   onPageSaveNote: (request, sendBack)=>
@@ -65,7 +61,7 @@ class Background extends Spine.Controller
     # tab.url is "chrome://newtab/"
     # then return
     
-    return if tab.url.indexOf('chrome') is 0
+    # return if tab.url.indexOf('chrome') is 0
 
     # console.log tab, @
     # noteId = MD5 tab.url
@@ -73,20 +69,33 @@ class Background extends Spine.Controller
     # note = Note.exists noteId
     # console.log note
 
-    @injectContentScripts tab.id
+    # @injectContentScripts tab.id
 
-  injectContentScripts: (tabId)->
+  injectPageApp: (tabId)->
     ChromeTabs.injectStyle tabId, 'content-scripts/css/page-note-scale.css'
-    # ChromeTabs.injectScript tabId, 'content-scripts/js/jquery.js'
-    # ChromeTabs.injectScript tabId, 'content-scripts/js/mousetrap.js'
-    # ChromeTabs.injectScript tabId, 'content-scripts/js/page-note.js'
     ChromeTabs.injectScript tabId, 'application.js'
     ChromeTabs.injectScript tabId, 'js/page-app.js'
 
   onTabUpdate: (tabId, changeInfo, tab)=>
-    # @log changeInfo, tab
-    PageAction.show tabId if MD5(tab.url) is 'd09057f8a646d24ef7287f02359deb9c'
+    allowed = false
+    allowed = true if tab.url.indexOf('http') is 0
+    allowed = true if tab.url.indexOf('https') is 0
+    return if not allowed
+    return if changeInfo.status isnt 'complete'
+    @injectPageApp tabId
 
+    # @log 'onTabUpdate'
+    # @log 'changeInfo', changeInfo
+    # @log 'tab', tab
+    # PageAction.show tabId if MD5(tab.url) is 'd09057f8a646d24ef7287f02359deb9c'
+
+  onTabCreate: (tab)=>
+    # @log 'onTabCreate'
+    # @log 'tab', tab
+
+  onTabActive: (tab)=>
+    # @log 'onTabActive'
+    # @log 'tab', tab
 
 
 module.exports = Background
