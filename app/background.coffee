@@ -1,7 +1,8 @@
 require('lib/setup')
 CouchDB = require 'lib/couchDB'
-Extension = require 'lib/BrowserAction'
+BrowserAction = require 'lib/BrowserAction'
 ChromeTabs = require 'lib/ChromeTabs'
+ChromeExtension = require 'lib/ChromeExtension'
 MD5 = require 'lib/md5-min'
 
 Spine = require('spine')
@@ -28,7 +29,36 @@ class Background extends Spine.Controller
 
   running: ->
     ChromeTabs.listenUpdate @onTabUpdate
-    Extension.listenClick @onClick
+    BrowserAction.listenClick @onClick
+    ChromeExtension.listenMessage @onMessage
+    Note.fetch()
+
+  onMessage: (request, sender, sendBack)=>
+    return if not sender.tab
+    switch request.action
+      when 'page-get-note' then @onPageGetNote request, sendBack
+      when 'page-save-note' then @onPageSaveNote request, sendBack
+      else return
+
+  onPageGetNote: (request, sendBack)=>
+    id = MD5 request.url
+    if Note.exists id
+    then note = Note.find id
+    else note = @newNote id, request.url
+    sendBack note
+
+  newNote: (id, url)->
+    now = new Date
+    Note.create
+      id: id
+      index: ''
+      content: ''
+      url: url
+      time: now.getTime()
+
+  onPageSaveNote: (request, sendBack)=>
+    Note.update request.note.id, request.note
+    sendBack 'saved'
 
   onClick: (tab)=>
     # if tab.url is "chrome://extensions/" or 

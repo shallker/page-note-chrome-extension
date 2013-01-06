@@ -1,5 +1,6 @@
 Mousetrap = require 'lib/mousetrap'
 MD5 = require 'lib/md5-min'
+ChromeExtension = require 'lib/ChromeExtension'
 
 Spine = require('spine')
 Note = require 'models/note'
@@ -21,40 +22,42 @@ class Notes extends Spine.Controller
   constructor: (url)->
     super
     @url = url
-    @id = MD5(url)
-    @append @render @load()
+    @id = MD5 url
+    @getNote @running
+
+  running: =>
+    @append @render @note
     @listenKeys()
 
+  getNote: (call = ->)->
+    requests = 
+      action: 'page-get-note'
+      url: @url
+    ChromeExtension.sendMessage requests, (response)=> 
+      @note = response
+      call()
+
+  saveNote: (call = ->)->
+    requests =
+      action: 'page-save-note'
+      url: @url
+      note: @note
+    ChromeExtension.sendMessage requests, (response)=>
+      call()
+
   render: (note)->
-    @log note
     require('views/notes')(note)
-
-  load: ->
-    Note.fetch()
-    if Note.exists(@id)
-    then @note = Note.find(@id)
-    else @note = @newNote(@id, @url)
-    @note
-
-  newNote: (id, url)->
-    now = new Date
-    Note.create
-      id: id
-      index: ''
-      content: ''
-      url: url
-      time: now.getTime()
 
   listenKeys: ->
     Mousetrap.bind '`', @onTogglePageNote
 
   onIndexChange: (ev)=>
     @note.index = @index.val()
-    @note.save()
+    @saveNote()
 
   onContentChange: (ev)=>
     @note.content = @content.val()
-    @note.save()
+    @saveNote()
 
   onTogglePageNote: (ev)=>
     if @opend then @closePageNote() else @openPageNote()
