@@ -1,4 +1,0 @@
-<div id="page-note" class="page-note">
-    <input type="text" class="note-index" value="<%= @index %>">
-    <textarea class="note-content"><%= @content %></textarea>
-</div>
