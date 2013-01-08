@@ -20,6 +20,7 @@ class Background extends Spine.Controller
     super
     NoteCouch.fetch()
     @running()
+    window.tabs = @tabs
 
   running: ->
     @listen()
@@ -29,6 +30,7 @@ class Background extends Spine.Controller
     ChromeTabs.listenUpdate @onTabUpdate
     ChromeTabs.listenActive @onTabActive
     ChromeTabs.listenCreate @onTabCreate
+    ChromeTabs.listenRemove @onTabRemove
     BrowserAction.listenClick @onClick
     ChromeExtension.listenMessage @onMessageQueue
 
@@ -49,10 +51,11 @@ class Background extends Spine.Controller
 
 
   injectPageApp: (tab)->
-    ChromeTabs.injectStyle tab.id, 'content-scripts/css/page-note-scale.css'
-    ChromeTabs.injectScript tab.id, 'application.js'
-    ChromeTabs.injectScript tab.id, 'js/page-app.js'
-    @tabs[tab.id] = tab
+    tid = parseInt(tab.id)
+    ChromeTabs.injectStyle tid, 'content-scripts/css/page-note-scale.css'
+    ChromeTabs.injectScript tid, 'application.js'
+    ChromeTabs.injectScript tid, 'js/page-app.js'
+    @tabs[tid] = tab
     console.log 'injectPageApp', tab
 
   arrDel: (arr, value)->
@@ -137,9 +140,8 @@ class Background extends Spine.Controller
     # @log 'onTabActive'
     # @log 'tab', tab
 
-  onTabRemove: (tab)=>
-    @log 'onTabRemove', tab
-    delete @tabs[tab.id] if @tabs[tab.id]
+  onTabRemove: (tabId, info)=>
+    delete @tabs[tabId]
 
 
 module.exports = Background
