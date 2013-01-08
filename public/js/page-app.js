@@ -5,6 +5,11 @@
 //   exports.page = new Page();
 // });
 
-    var exports = this;
-    var Page = require("page");
-    exports.Page = new Page();
+var exports = this;
+(function() {
+
+  if (exports.page) return;
+  var Page = require('page');
+  exports.page = new Page();
+
+})(exports)
