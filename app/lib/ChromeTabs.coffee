@@ -27,11 +27,9 @@ class ChromeTabs
     chrome.tabs.getCurrent()
 
   @injectScript: (tabId = null, file)->
-    console.log tabId, file
     chrome.tabs.executeScript tabId, file: file
 
   @injectStyle: (tabId = null, file)->
-    console.log tabId, file
     chrome.tabs.insertCSS tabId, file: file
 
 module.exports = ChromeTabs
