@@ -17,6 +17,9 @@ class ChromeTabs
   @listenActive: (listener)->
     chrome.tabs.onActivated.addListener listener
 
+  @listenRemove: (listener)->
+    chrome.tabs.onRemoved.addListener listener
+
   @getSelected: (listener)->
     chrome.tabs.getSelected null, listener
 
