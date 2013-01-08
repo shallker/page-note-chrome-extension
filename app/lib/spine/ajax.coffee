@@ -105,6 +105,7 @@ class Singleton extends Base
 
   reload: (params, options) ->
     @queue =>
+      console.log Ajax.getURL(@record)
       @ajax(
         params,
         type: 'GET'
@@ -152,7 +153,7 @@ class Singleton extends Base
         data = false
       else
         # @s, update local record '_rev' column after a new revision
-        if data.rev then data._rev = data.rev
+        @record._rev = data.rev if data.rev 
         data = @model.fromJSON(data)
 
       Ajax.disable =>
