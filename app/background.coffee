@@ -46,9 +46,10 @@ class Background extends Spine.Controller
     message = 
       action: 'refresh-record'
       record: record
-    @sendMessage tid, message for tid, tab of @tabs
-    # ChromeTabs.sendMessage(tab.id, {greeting: "hello"}, function(response) {
-
+    chrome.tabs.getSelected null, (tab)=>
+      return if not @isAllowed tab
+      @sendMessage tab.id, message
+    # @sendMessage tid, message for tid, tab of @tabs
 
   injectPageApp: (tab)->
     tid = parseInt(tab.id)
