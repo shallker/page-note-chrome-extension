@@ -26,6 +26,14 @@ class ChromeTabs
   @getCurrent: ->
     chrome.tabs.getCurrent()
 
+  # onResponse = (response)->
+  @sendMessage: (tabId, message, onResponse = ->)->
+    # console.log 'tabId', tabId
+    # console.log 'message', message
+    # console.log 'onResponse', onResponse
+    tabId = parseInt(tabId)
+    chrome.tabs.sendMessage tabId, message, onResponse
+
   @injectScript: (tabId = null, file)->
     chrome.tabs.executeScript tabId, file: file
 
