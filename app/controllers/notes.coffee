@@ -6,6 +6,8 @@ class Notes extends Spine.Controller
 
   url: ''
 
+  modified: false
+
   className: 'page-note-wrapper'
 
   elements:
@@ -23,28 +25,24 @@ class Notes extends Spine.Controller
     @getNote @start
 
   start: =>
-    @fill @note.index, @note.content
+    @fill @note
     @enable()
+    @listen()
 
-  fill: (index, content)->
-    @index.val index
-    @content.val content
+  listen: ->
+    ChromeExtension.listenMessage @onMessage
 
-  getNote: (call = ->)->
+  fill: (note)->
+    @index.val note.index
+    @content.val note.content
+
+  getNote: (onResponse)->
     requests = 
       action: 'page-get-note'
       url: @url
     ChromeExtension.sendMessage requests, (response)=> 
       @note = response
-      call()
-
-  saveNote: (call = ->)->
-    requests =
-      action: 'page-save-note'
-      url: @url
-      note: @note
-    ChromeExtension.sendMessage requests, (response)=>
-      call()
+      onResponse?()
 
   render: ->
     @template = require('views/notes')()
@@ -59,10 +57,24 @@ class Notes extends Spine.Controller
 
   onIndexChange: (ev)=>
     @note.index = @index.val()
-    @saveNote()
+    @modified = true
 
   onContentChange: (ev)=>
     @note.content = @content.val()
-    @saveNote()
+    @modified = true
+
+  onRefresh: (record)=>
+    return if record.id isnt @note.id
+    @fill record
+
+  onMessage: (message, sender, sendBack)=>
+    # @log 'message', message
+    # @log 'sender', sender
+    # @log 'sendBack', sendBack
+    switch message.action
+      when 'refresh-record'
+        @onRefresh message.record
+      else return
+
 
 module.exports = Notes
