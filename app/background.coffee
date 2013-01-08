@@ -12,60 +12,60 @@ NoteCouch = require 'models/note-couch'
 
 class Background extends Spine.Controller
 
-  pageAppTabs: {}
+  tabs: {}
   fetched: false
   messages: []
 
   constructor: ->
     super
+    NoteCouch.fetch()
     @running()
 
   running: ->
+    @listen()
+    @listenRecords()
+
+  listen: ->
     ChromeTabs.listenUpdate @onTabUpdate
     ChromeTabs.listenActive @onTabActive
     ChromeTabs.listenCreate @onTabCreate
     BrowserAction.listenClick @onClick
     ChromeExtension.listenMessage @onMessageQueue
-    NoteCouch.fetch()
 
+  listenRecords: ->
     NoteCouch.bind "refresh", (records) =>
       @fetched = true
       console.log 'refresh', records
-      @refreshRecord record for record in records
-      # damn = NoteCouch.find '7a48e2531cf60ecc27eec288d904d9bc'
-      # damn.content = 'damn content 05'
-      # damn.save()
-
+      @pageRefreshRecord record for record in records
     NoteCouch.bind "update", (record) ->
-      # console.log 'update', record
+      # console.log 'update', record      
 
-  refreshRecord: (record)->
+  pageRefreshRecord: (record)->
     message = 
       action: 'refresh-record'
       record: record
-    ChromeTabs.sendMessage id, message for id, tab of @pageAppTabs
+    @sendMessage tid, message for tid, tab of @tabs
     # ChromeTabs.sendMessage(tab.id, {greeting: "hello"}, function(response) {
 
 
   injectPageApp: (tab)->
-    # tabId = parseInt(tab.id)
     ChromeTabs.injectStyle tab.id, 'content-scripts/css/page-note-scale.css'
     ChromeTabs.injectScript tab.id, 'application.js'
     ChromeTabs.injectScript tab.id, 'js/page-app.js'
-    @pageAppTabs[tab.id] = tab
+    @tabs[tab.id] = tab
     console.log 'injectPageApp', tab
 
   arrDel: (arr, value)->
     arr.splice(arr.indexOf(value), 1)
 
-  onMessage: =>
-    return window.setTimeout @onMessage, 500 if not @fetched
-    msg = @messages.shift()
-    return if not msg.sender.tab
-    switch msg.request.action
-      when 'page-get-note' then @onPageGetNote msg.request, msg.sendBack
-      when 'page-save-note' then @onPageSaveNote msg.request, msg.sendBack
-      else return
+  isAllowed: (tab)->
+    allowed = false
+    allowed = true if tab.url.indexOf('http') is 0
+    allowed = true if tab.url.indexOf('https') is 0
+    allowed
+
+  sendMessage: (tabId, message, onRespond = ->)->
+    ChromeTabs.sendMessage tabId, message, onRespond
 
   onMessageQueue: (request, sender, sendBack)=>
     @messages.push {request: request, sender: sender, sendBack: sendBack}
@@ -74,36 +74,42 @@ class Background extends Spine.Controller
     # send a response after the listener returns
     true
 
-  onPageGetNote: (request, sendBack)=>
+  onMessage: =>
+    return window.setTimeout @onMessage, 100 if not @fetched
+    ms = @messages.shift()
+    return if not ms.sender.tab
+    switch ms.request.action
+      when 'page-get-note'
+      then @onPageGetNote ms.sender.tab, ms.request, ms.sendBack
+      when 'page-save-note'
+      then @onPageSaveNote ms.sender.tab, ms.request, ms.sendBack
+      else return
+
+  onPageGetNote: (tab, request, respond)=>
+    # return @log 'tab', tab
     id = MD5 request.url
     if NoteCouch.exists id
-      note = NoteCouch.find id
-      # console.log note.reload
-      # console.log note.reload()
-      sendBack note
+      respond NoteCouch.find id
       return NoteCouch.fetch id: id
     else
       now = new Date
-      sendBack NoteCouch.create
+      respond NoteCouch.create
         id: id
-        index: ''
+        title: tab.title
         content: ''
         url: request.url
         time: now.getTime()
 
-  onPageSaveNote: (request, sendBack)=>
+  onPageSaveNote: (tab, request, respond)=>
     note = NoteCouch.find request.note.id
-    note.index = request.note.index
+    note.title = request.note.title
     note.content = request.note.content
     note.save()
-    sendBack 'saved'
+    respond 'saved'
 
   onClick: (tab)=>
-    allowed = false
-    allowed = true if tab.url.indexOf('http') is 0
-    allowed = true if tab.url.indexOf('https') is 0
-    return if not allowed
-    return if @pageAppTabs[tab.id]
+    return if not @isAllowed(tab)
+    return if @tabs[tab.id]
     @injectPageApp tab
 
     # if tab.url is "chrome://extensions/" or 
@@ -119,10 +125,7 @@ class Background extends Spine.Controller
     # console.log note
 
   onTabUpdate: (tabId, changeInfo, tab)=>
-    allowed = false
-    allowed = true if tab.url.indexOf('http') is 0
-    allowed = true if tab.url.indexOf('https') is 0
-    return if not allowed
+    return if not @isAllowed(tab)
     return if changeInfo.status isnt 'complete'
     @injectPageApp tab
 
@@ -136,7 +139,7 @@ class Background extends Spine.Controller
 
   onTabRemove: (tab)=>
     @log 'onTabRemove', tab
-    delete @pageAppTabs[tab.id] if @pageAppTabs[tab.id]
+    delete @tabs[tab.id] if @tabs[tab.id]
 
 
 module.exports = Background

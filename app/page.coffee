@@ -39,7 +39,7 @@ class Page extends Spine.Controller
     @sendMessage requests, onResponse
 
   sendMessage: (message, onResponse)->
-    ChromeExtension.sendMessage requests, onResponse
+    ChromeExtension.sendMessage message, onResponse
 
   closeNote: ->
     $(html).removeClass 'page-note-open'
