@@ -29,8 +29,9 @@ class Background extends Spine.Controller
     NoteCouch.fetch()
 
     NoteCouch.bind "refresh", (records) =>
-      console.log 'refresh', records
       @fetched = true
+      console.log 'refresh', records
+      @refreshRecord record for record in records
       # damn = NoteCouch.find '7a48e2531cf60ecc27eec288d904d9bc'
       # damn.content = 'damn content 05'
       # damn.save()
@@ -38,12 +39,21 @@ class Background extends Spine.Controller
     NoteCouch.bind "update", (record) ->
       # console.log 'update', record
 
-  injectPageApp: (tabId)->
-    ChromeTabs.injectStyle tabId, 'content-scripts/css/page-note-scale.css'
-    ChromeTabs.injectScript tabId, 'application.js'
-    ChromeTabs.injectScript tabId, 'js/page-app.js'
-    @pageAppTabs[tabId] = true
-    console.log 'injectPageApp', tabId
+  refreshRecord: (record)->
+    message = 
+      action: 'refresh-record'
+      record: record
+    ChromeTabs.sendMessage id, message for id, tab of @pageAppTabs
+    # ChromeTabs.sendMessage(tab.id, {greeting: "hello"}, function(response) {
+
+
+  injectPageApp: (tab)->
+    # tabId = parseInt(tab.id)
+    ChromeTabs.injectStyle tab.id, 'content-scripts/css/page-note-scale.css'
+    ChromeTabs.injectScript tab.id, 'application.js'
+    ChromeTabs.injectScript tab.id, 'js/page-app.js'
+    @pageAppTabs[tab.id] = tab
+    console.log 'injectPageApp', tab
 
   arrDel: (arr, value)->
     arr.splice(arr.indexOf(value), 1)
@@ -66,17 +76,26 @@ class Background extends Spine.Controller
 
   onPageGetNote: (request, sendBack)=>
     id = MD5 request.url
-    return sendBack NoteCouch.find id if NoteCouch.exists id
-    now = new Date
-    sendBack NoteCouch.create
-      id: id
-      index: ''
-      content: ''
-      url: request.url
-      time: now.getTime()
+    if NoteCouch.exists id
+      note = NoteCouch.find id
+      # console.log note.reload
+      # console.log note.reload()
+      sendBack note
+      return NoteCouch.fetch id: id
+    else
+      now = new Date
+      sendBack NoteCouch.create
+        id: id
+        index: ''
+        content: ''
+        url: request.url
+        time: now.getTime()
 
   onPageSaveNote: (request, sendBack)=>
-    NoteCouch.update request.note.id, request.note
+    note = NoteCouch.find request.note.id
+    note.index = request.note.index
+    note.content = request.note.content
+    note.save()
     sendBack 'saved'
 
   onClick: (tab)=>
@@ -85,7 +104,7 @@ class Background extends Spine.Controller
     allowed = true if tab.url.indexOf('https') is 0
     return if not allowed
     return if @pageAppTabs[tab.id]
-    @injectPageApp tab.id
+    @injectPageApp tab
 
     # if tab.url is "chrome://extensions/" or 
     # tab.url is "chrome://newtab/"
@@ -105,7 +124,7 @@ class Background extends Spine.Controller
     allowed = true if tab.url.indexOf('https') is 0
     return if not allowed
     return if changeInfo.status isnt 'complete'
-    @injectPageApp tabId
+    @injectPageApp tab
 
   onTabCreate: (tab)=>
     # @log 'onTabCreate'
