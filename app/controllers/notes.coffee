@@ -11,18 +11,18 @@ class Notes extends Spine.Controller
   className: 'page-note-wrapper'
 
   elements:
-    'input.note-index': 'index'
+    'input.note-title': 'title'
     'textarea.note-content': 'content'
 
   events:
-    'change input.note-index': 'onIndexChange'
+    'change input.note-title': 'onTitleChange'
     'change textarea.note-content': 'onContentChange'
 
   constructor: (url)->
     super
     @url = url
     @append @render()
-    @getNote @start
+    @load @start
 
   start: =>
     @fill @note
@@ -33,30 +33,34 @@ class Notes extends Spine.Controller
     ChromeExtension.listenMessage @onMessage
 
   fill: (note)->
-    @index.val note.index
+    @title.val note.title
     @content.val note.content
 
-  getNote: (onResponse)->
+  load: (onLoad)->
     requests = 
       action: 'page-get-note'
       url: @url
-    ChromeExtension.sendMessage requests, (response)=> 
+    onResponse = (response)=>
       @note = response
-      onResponse?()
+      onLoad?()
+    @sendMessage requests, onResponse
 
   render: ->
     @template = require('views/notes')()
 
+  sendMessage: (message, onResponse = ->)->
+    ChromeExtension.sendMessage message, onResponse
+
   disable: ->
-    @index.prop 'disabled', true
+    @title.prop 'disabled', true
     @content.prop 'disabled', true
 
   enable: ->
-    @index.prop 'disabled', false
+    @title.prop 'disabled', false
     @content.prop 'disabled', false
 
-  onIndexChange: (ev)=>
-    @note.index = @index.val()
+  onTitleChange: (ev)=>
+    @note.title = @title.val()
     @modified = true
 
   onContentChange: (ev)=>

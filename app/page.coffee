@@ -17,7 +17,7 @@ class Page extends Spine.Controller
 
   constructor: ->
     super
-    $(body).append @el
+    $('body').append @el
     @url = @getURL()
     @listenKeys()
 
@@ -30,16 +30,16 @@ class Page extends Spine.Controller
   listenKeys: ->
     Mousetrap.bind '`', @onTogglePageNote
 
-  onTogglePageNote: (ev)=>
-    if @note then @closeNote() else @openNote()
-
-  saveNote: (note, onResponse)->
+  saveNote: (note, onSave)->
     requests =
       action: 'page-save-note'
       url: note.url
       note: note
-    ChromeExtension.sendMessage requests, (response)=>
-      onResponse?()
+    onResponse = (response)=> onSave?()
+    @sendMessage requests, onResponse
+
+  sendMessage: (message, onResponse)->
+    ChromeExtension.sendMessage requests, onResponse
 
   closeNote: ->
     $(html).removeClass 'page-note-open'
@@ -60,5 +60,8 @@ class Page extends Spine.Controller
     
   clearDocument: ->
     @clearing = window.setTimeout @removeHtmlClass, 1000
+
+  onTogglePageNote: (ev)=>
+    if @note then @closeNote() else @openNote()
 
 module.exports = Page

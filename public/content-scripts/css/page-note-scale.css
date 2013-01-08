@@ -57,7 +57,7 @@ body {
   text-align: center;
 }
 
-#page-note input.note-index {
+#page-note input.note-title {
   margin: 0;
   outline: 0;
   border: 1px solid #DDD;
@@ -74,7 +74,7 @@ body {
   border-radius: 0;
 }
 
-#page-note input.note-index:focus {
+#page-note input.note-title:focus {
   outline: 0;
   box-shadow: 0 0 0 0;
   border: 1px solid #DDD;

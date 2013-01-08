@@ -1,4 +1,4 @@
 <div id="page-note" class="page-note">
-    <input type="text" class="note-index" value="loading..." disabled>
+    <input class="note-title" type="text" value="loading..." disabled>
     <textarea class="note-content" disabled>loading...</textarea>
 </div>
