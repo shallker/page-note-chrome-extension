@@ -47,11 +47,13 @@ class Background extends Spine.Controller
       action: 'refresh-record'
       record: record
     chrome.tabs.getSelected null, (tab)=>
+      # @log 'getSelected', tab
       return if not @isAllowed tab
       @sendMessage tab.id, message
     # @sendMessage tid, message for tid, tab of @tabs
 
   injectPageApp: (tab)->
+    return if not @isAllowed tab
     tid = parseInt(tab.id)
     ChromeTabs.injectStyle tid, 'content-scripts/css/page-note-scale.css'
     ChromeTabs.injectScript tid, 'application.js'
