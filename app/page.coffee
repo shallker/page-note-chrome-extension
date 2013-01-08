@@ -1,5 +1,6 @@
 require('lib/setup')
 Mousetrap = require 'lib/mousetrap'
+ChromeExtension = require 'lib/ChromeExtension'
 
 Spine = require('spine')
 Notes = require 'controllers/notes'
@@ -25,7 +26,6 @@ class Page extends Spine.Controller
     url = loc.origin + loc.pathname + loc.search
     # trim last backslash /
     url = url.replace(/\/$/g, "")
-    url
 
   listenKeys: ->
     Mousetrap.bind '`', @onTogglePageNote
@@ -33,9 +33,18 @@ class Page extends Spine.Controller
   onTogglePageNote: (ev)=>
     if @note then @closeNote() else @openNote()
 
+  saveNote: (note, onResponse)->
+    requests =
+      action: 'page-save-note'
+      url: note.url
+      note: note
+    ChromeExtension.sendMessage requests, (response)=>
+      onResponse?()
+
   closeNote: ->
     $(html).removeClass 'page-note-open'
-    @note = null
+    @saveNote @note.note if @note.modified
+    delete @note
     @clearDocument()
 
   openNote: ->
@@ -46,7 +55,7 @@ class Page extends Spine.Controller
     window.clearTimeout @clearing
 
   removeHtmlClass: =>
-    return if @note
+    return if $(html).hasClass('page-note-open')
     $(html).removeClass 'page-note-init'
     
   clearDocument: ->
