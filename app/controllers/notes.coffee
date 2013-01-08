@@ -19,10 +19,16 @@ class Notes extends Spine.Controller
   constructor: (url)->
     super
     @url = url
-    @getNote @running
+    @append @render()
+    @getNote @start
 
-  running: =>
-    @append @render @note
+  start: =>
+    @fill @note.index, @note.content
+    @enable()
+
+  fill: (index, content)->
+    @index.val index
+    @content.val content
 
   getNote: (call = ->)->
     requests = 
@@ -40,8 +46,16 @@ class Notes extends Spine.Controller
     ChromeExtension.sendMessage requests, (response)=>
       call()
 
-  render: (note)->
-    require('views/notes')(note)
+  render: ->
+    @template = require('views/notes')()
+
+  disable: ->
+    @index.prop 'disabled', true
+    @content.prop 'disabled', true
+
+  enable: ->
+    @index.prop 'disabled', false
+    @content.prop 'disabled', false
 
   onIndexChange: (ev)=>
     @note.index = @index.val()
