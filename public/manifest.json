@@ -5,7 +5,10 @@
   "version": "1.0",
   "manifest_version": 2,
   
-  "permissions": ["tabs", "<all_urls>"],
+  "permissions": [
+    "tabs",
+    "<all_urls>"
+  ],
   
   "background": {"page": "background.html"},
   
@@ -21,6 +24,19 @@
       "38": "icons/icon_38.png"
     },
     "default_title": "Page Note"
-  }
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["http://*/*"],
+      "css": ["content-scripts/css/page-note-scale.css"],
+      "js": ["application.js", "js/page-app.js"]
+    },
+    {
+      "matches": ["https://*/*"],
+      "css": ["content-scripts/css/page-note-scale.css"],
+      "js": ["application.js", "js/page-app.js"]
+    }
+  ]
 
 }

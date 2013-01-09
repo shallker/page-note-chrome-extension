@@ -27,10 +27,10 @@ class Background extends Spine.Controller
     @listenRecords()
 
   listen: ->
-    ChromeTabs.listenUpdate @onTabUpdate
-    ChromeTabs.listenActive @onTabActive
-    ChromeTabs.listenCreate @onTabCreate
-    ChromeTabs.listenRemove @onTabRemove
+    # ChromeTabs.listenUpdate @onTabUpdate
+    # ChromeTabs.listenActive @onTabActive
+    # ChromeTabs.listenCreate @onTabCreate
+    # ChromeTabs.listenRemove @onTabRemove
     BrowserAction.listenClick @onClick
     ChromeExtension.listenMessage @onMessageQueue
 
@@ -38,37 +38,38 @@ class Background extends Spine.Controller
     NoteCouch.bind "refresh", (records) =>
       @fetched = true
       console.log 'refresh', records
-      @pageRefreshRecord record for record in records
+      @flashBadge 'load'
+      # @pageRefreshRecord record for record in records
     NoteCouch.bind "update", (record) ->
       # console.log 'update', record      
 
-  pageRefreshRecord: (record)->
-    message = 
-      action: 'refresh-record'
-      record: record
-    chrome.tabs.getSelected null, (tab)=>
+  # pageRefreshRecord: (record)->
+  #   message = 
+  #     action: 'refresh-record'
+  #     record: record
+  #   chrome.tabs.getSelected null, (tab)=>
       # @log 'getSelected', tab
-      return if not @isAllowed tab
-      @sendMessage tab.id, message
+      # return if not @isAllowed tab
+      # @sendMessage tab.id, message
     # @sendMessage tid, message for tid, tab of @tabs
 
-  injectPageApp: (tab)->
-    return if not @isAllowed tab
-    tid = parseInt(tab.id)
-    ChromeTabs.injectStyle tid, 'content-scripts/css/page-note-scale.css'
-    ChromeTabs.injectScript tid, 'application.js'
-    ChromeTabs.injectScript tid, 'js/page-app.js'
-    @tabs[tid] = tab
-    console.log 'injectPageApp', tab
+  # injectPageApp: (tab)->
+  #   return if not @isAllowed tab
+  #   tid = parseInt(tab.id)
+  #   ChromeTabs.injectStyle tid, 'content-scripts/css/page-note-scale.css'
+  #   ChromeTabs.injectScript tid, 'application.js'
+  #   ChromeTabs.injectScript tid, 'js/page-app.js'
+  #   @tabs[tid] = tab
+  #   console.log 'injectPageApp', tab
 
-  arrDel: (arr, value)->
-    arr.splice(arr.indexOf(value), 1)
+  # arrDel: (arr, value)->
+  #   arr.splice(arr.indexOf(value), 1)
 
-  isAllowed: (tab)->
-    allowed = false
-    allowed = true if tab.url.indexOf('http') is 0
-    allowed = true if tab.url.indexOf('https') is 0
-    allowed
+  # isAllowed: (tab)->
+  #   allowed = false
+  #   allowed = true if tab.url.indexOf('http') is 0
+  #   allowed = true if tab.url.indexOf('https') is 0
+  #   allowed
 
   sendMessage: (tabId, message, onRespond = ->)->
     ChromeTabs.sendMessage tabId, message, onRespond
@@ -85,13 +86,13 @@ class Background extends Spine.Controller
     ms = @messages.shift()
     return if not ms.sender.tab
     switch ms.request.action
-      when 'page-get-note'
-      then @onPageGetNote ms.sender.tab, ms.request, ms.sendBack
+      when 'page-load-note'
+      then @onPageLoadNote ms.sender.tab, ms.request, ms.sendBack
       when 'page-save-note'
       then @onPageSaveNote ms.sender.tab, ms.request, ms.sendBack
       else return
 
-  onPageGetNote: (tab, request, respond)=>
+  onPageLoadNote: (tab, request, respond)=>
     # return @log 'tab', tab
     id = MD5 request.url
     if NoteCouch.exists id
@@ -113,10 +114,26 @@ class Background extends Spine.Controller
     note.save()
     respond 'saved'
 
+  setTitle: (text)->
+    BrowserAction.setTitle text
+
+  setBadge: (text)->
+    BrowserAction.setBadge text
+
+  flashBadge: (text)->
+    onGet = (badge)=>
+      @setBadge text
+      @later => @setBadge badge,
+      500
+    BrowserAction.getBadge onGet
+
+  later: (func, milseconds)->
+    window.setTimeout func, milseconds
+
   onClick: (tab)=>
-    return if not @isAllowed(tab)
-    return if @tabs[tab.id]
-    @injectPageApp tab
+    # return if not @isAllowed(tab)
+    # return if @tabs[tab.id]
+    # @injectPageApp tab
 
     # if tab.url is "chrome://extensions/" or 
     # tab.url is "chrome://newtab/"
@@ -130,21 +147,21 @@ class Background extends Spine.Controller
     # note = NoteCouch.exists noteId
     # console.log note
 
-  onTabUpdate: (tabId, changeInfo, tab)=>
-    return if not @isAllowed(tab)
-    return if changeInfo.status isnt 'complete'
-    @injectPageApp tab
+  # onTabUpdate: (tabId, changeInfo, tab)=>
+    # return if not @isAllowed(tab)
+    # return if changeInfo.status isnt 'complete'
+    # @injectPageApp tab
 
-  onTabCreate: (tab)=>
+  # onTabCreate: (tab)=>
     # @log 'onTabCreate'
     # @log 'tab', tab
 
-  onTabActive: (tab)=>
+  # onTabActive: (tab)=>
     # @log 'onTabActive'
     # @log 'tab', tab
 
-  onTabRemove: (tabId, info)=>
-    delete @tabs[tabId]
+  # onTabRemove: (tabId, info)=>
+    # delete @tabs[tabId]
 
 
 module.exports = Background

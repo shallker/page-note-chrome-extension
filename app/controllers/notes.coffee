@@ -22,7 +22,7 @@ class Notes extends Spine.Controller
     super
     @url = url
     @append @render()
-    @load @start
+    @loadNote @start
 
   start: =>
     @fill @note
@@ -36,9 +36,9 @@ class Notes extends Spine.Controller
     @title.val note.title
     @content.val note.content
 
-  load: (onLoad)->
+  loadNote: (onLoad)->
     requests = 
-      action: 'page-get-note'
+      action: 'page-load-note'
       url: @url
     onResponse = (response)=>
       @note = response
