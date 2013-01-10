@@ -8,8 +8,8 @@
 var exports = this;
 (function() {
 
-  if (exports.page) return;
+  if (exports._PageNoteApp) return;
   var Page = require('page');
-  exports.page = new Page();
+  exports._PageNoteApp = new Page();
 
 })(exports)
