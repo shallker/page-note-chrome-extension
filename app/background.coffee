@@ -99,8 +99,8 @@ class Background extends Spine.Controller
 
   onPageLoadNote: (port, mesg)=>
     id = MD5 mesg.url
+    NoteCouch.fetch id: id
     if NoteCouch.exists id
-      NoteCouch.fetch id: id
       note = NoteCouch.find id
     else
       tab = port.sender.tab
