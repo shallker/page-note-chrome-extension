@@ -9,10 +9,6 @@ class ChromeExtension
   @sendMessage: (msg, call)->
     chrome.extension.sendMessage msg, call
 
-  # listener = (request, sender, sendResponse)->
-  @listenMessage: (listener)->
-    chrome.extension.onMessage.addListener listener
-
   # mesg = {}
   # call = (msg)->
   @postMessage: (msg, call)->
@@ -23,4 +19,13 @@ class ChromeExtension
   @connect: (name = '')->
     chrome.extension.connect name: name
     
+  # onMessage = (request, sender, sendResponse)->
+  @listenMessage: (onMessage)->
+    chrome.extension.onMessage.addListener onMessage
+
+  # onConnect = (port)=>
+  @listenConnect: (onConnect)->
+    chrome.extension.onConnect.addListener onConnect  
+    
+
 module.exports = ChromeExtension
