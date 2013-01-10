@@ -77,14 +77,19 @@ class Background extends Spine.Controller
   onDisconnect: (port)=>
     delete @ports[port.portId_]
 
-  # injectPageApp: (tab)->
-  #   return if not @isAllowed tab
-  #   tid = parseInt(tab.id)
-  #   ChromeTabs.injectStyle tid, 'content-scripts/css/page-note-scale.css'
-  #   ChromeTabs.injectScript tid, 'application.js'
-  #   ChromeTabs.injectScript tid, 'js/page-app.js'
-  #   @tabs[tid] = tab
-  #   console.log 'injectPageApp', tab
+  injectPageApp: (tab)->
+    return if not @isAllowed tab
+    tid = parseInt(tab.id)
+    ChromeTabs.injectStyle tid, 'content-scripts/css/page-note-scale.css'
+    ChromeTabs.injectScript tid, 'application.js'
+    ChromeTabs.injectScript tid, 'js/page-app.js'
+    console.log 'injectPageApp', tab
+
+  isAllowed: (tab)->
+    allowed = false
+    allowed = true if tab.url.indexOf('http') is 0
+    allowed = true if tab.url.indexOf('https') is 0
+    allowed
 
   # arrDel: (arr, value)->
   #   arr.splice(arr.indexOf(value), 1)
@@ -93,18 +98,18 @@ class Background extends Spine.Controller
     port.postMessage mesg
 
   onPageLoadNote: (port, mesg)=>
-    # return @log 'tab', tab
     id = MD5 mesg.url
     if NoteCouch.exists id
       NoteCouch.fetch id: id
       note = NoteCouch.find id
     else
+      tab = port.sender.tab
       now = new Date
       note = NoteCouch.create
         id: id
         title: tab.title
         content: ''
-        url: request.url
+        url: mesg.url
         time: now.getTime()    
     port.postMessage
       action: 're-page-load-note'
@@ -129,7 +134,8 @@ class Background extends Spine.Controller
       setTimeout (=> @setBadge text), milsecs
 
   onClick: (tab)=>
-    # @log tab
+    @log 'onClick', tab
+    # @injectPageApp tab
 
   # onTabUpdate: (tabId, changeInfo, tab)=>
     # return if not @isAllowed(tab)
