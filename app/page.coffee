@@ -19,6 +19,7 @@ class Page extends Spine.Controller
     super
     $('body').append @el
     @url = @getURL()
+    @port = @connect @url
     @listenKeys()
 
   getURL: ->
@@ -27,29 +28,30 @@ class Page extends Spine.Controller
     # trim last backslash /
     url = url.replace(/\/$/g, "")
 
+  connect: (name)->
+    ChromeExtension.connect name
+
+  postMessage: (mesg)->
+    @port.postMessage mesg
+
   listenKeys: ->
     Mousetrap.bind '`', @onTogglePageNote
 
-  saveNote: (note, onSave)->
-    requests =
+  saveNote: (note)->
+    mesg =
       action: 'page-save-note'
-      url: note.url
       note: note
-    onResponse = (response)=> onSave?()
-    @sendMessage requests, onResponse
+    @postMessage mesg
 
-  sendMessage: (message, onResponse)->
-    ChromeExtension.sendMessage message, onResponse
-
-  closeNote: ->
+  closeNotes: ->
     $(html).removeClass 'page-note-open'
-    @saveNote @note.note if @note.modified
-    delete @note
+    @saveNote @notes.note if @notes.modified
+    delete @notes
     @clearDocument()
 
-  openNote: ->
-    @note = new Notes(@url)
-    @html @note
+  openNotes: ->
+    @notes = new Notes(@url)
+    @html @notes
     $(html).addClass 'page-note-init'
     $(html).addClass 'page-note-open'
     window.clearTimeout @clearing
@@ -62,6 +64,6 @@ class Page extends Spine.Controller
     @clearing = window.setTimeout @removeHtmlClass, 1000
 
   onTogglePageNote: (ev)=>
-    if @note then @closeNote() else @openNote()
+    if @notes then @closeNotes() else @openNotes()
 
 module.exports = Page

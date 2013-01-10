@@ -21,35 +21,53 @@ class Notes extends Spine.Controller
   constructor: (url)->
     super
     @url = url
+    @port = @connect @url
     @append @render()
-    @loadNote @start
+    @loadNote()
 
   start: =>
     @fill @note
     @enable()
-    @listen()
-
-  listen: ->
-    ChromeExtension.listenMessage @onMessage
 
   fill: (note)->
     @title.val note.title
     @content.val note.content
 
-  loadNote: (onLoad)->
-    requests = 
+  loadNote: ->
+    @postMessage
       action: 'page-load-note'
       url: @url
-    onResponse = (response)=>
-      @note = response
-      onLoad?()
-    @sendMessage requests, onResponse
+
+  onLoadNote: (note)=>
+    @note = note
+    @start()
+
+  onRefreshNote: (note)=>
+    return if note.id isnt @note.id
+    @note = note
+    @fill @note
 
   render: ->
     @template = require('views/notes')()
 
-  sendMessage: (message, onResponse = ->)->
-    ChromeExtension.sendMessage message, onResponse
+  connect: (name)->
+    port = ChromeExtension.connect name
+    port.onMessage.addListener @onMessage
+    port
+
+  postMessage: (msg)->
+    @port.postMessage msg
+
+  onMessage: (msg)=>
+    # @log 'onMessage', msg
+    switch msg.action
+      when 're-page-load-note'
+      then @onLoadNote msg.note
+      when 're-page-save-note'
+      then ''
+      when 'refresh-note'
+      then @onRefreshNote msg.note
+      else return
 
   disable: ->
     @title.prop 'disabled', true
@@ -66,19 +84,6 @@ class Notes extends Spine.Controller
   onContentChange: (ev)=>
     @note.content = @content.val()
     @modified = true
-
-  onRefresh: (record)=>
-    return if record.id isnt @note.id
-    @fill record
-
-  onMessage: (message, sender, sendBack)=>
-    # @log 'message', message
-    # @log 'sender', sender
-    # @log 'sendBack', sendBack
-    switch message.action
-      when 'refresh-record'
-        @onRefresh message.record
-      else return
 
 
 module.exports = Notes

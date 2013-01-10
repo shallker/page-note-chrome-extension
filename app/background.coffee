@@ -13,45 +13,69 @@ NoteCouch = require 'models/note-couch'
 class Background extends Spine.Controller
 
   tabs: {}
+  ports: {}
   fetched: false
   messages: []
 
+  setInterval = (func, secs)-> window.setInterval func, secs
+  setTimeout = (func, secs)-> window.setTimeout func, secs
+
   constructor: ->
     super
-    NoteCouch.fetch()
-    @running()
-    window.tabs = @tabs
-
-  running: ->
     @listen()
-    @listenRecords()
+    NoteCouch.fetch()
+    NoteCouch.bind "refresh", @onRefreshNotes
+    NoteCouch.bind "update", @onUpdateNote
+
+  # run: ->
+    # setInterval @onRun, 1000*60*3
+
+  # check new data from server
+  # onRun: =>
 
   listen: ->
-    # ChromeTabs.listenUpdate @onTabUpdate
-    # ChromeTabs.listenActive @onTabActive
-    # ChromeTabs.listenCreate @onTabCreate
-    # ChromeTabs.listenRemove @onTabRemove
     BrowserAction.listenClick @onClick
-    ChromeExtension.listenMessage @onMessageQueue
+    ChromeExtension.listenConnect @onConnect
 
-  listenRecords: ->
-    NoteCouch.bind "refresh", (records) =>
-      @fetched = true
-      console.log 'refresh', records
-      @flashBadge 'load'
-      # @pageRefreshRecord record for record in records
-    NoteCouch.bind "update", (record) ->
-      # console.log 'update', record      
+  onRefreshNotes: (notes)=>
+    @log 'refresh', notes
+    @fetched = true
+    @flashBadge 'load'
+    @sendRefreshNote note for note in notes
 
-  # pageRefreshRecord: (record)->
-  #   message = 
-  #     action: 'refresh-record'
-  #     record: record
-  #   chrome.tabs.getSelected null, (tab)=>
-      # @log 'getSelected', tab
-      # return if not @isAllowed tab
-      # @sendMessage tab.id, message
-    # @sendMessage tid, message for tid, tab of @tabs
+  onUpdateNote: (note)=>
+    # @log 'update', note
+
+  sendRefreshNote: (note)->
+    mesg =
+      action: 'refresh-note'
+      note: note
+    @postMessage port, mesg for pid, port of @ports
+
+  onConnect: (port)=>
+    # @log 'onConnect', port
+    pid = port.portId_
+    @ports[pid] = port
+    port.onMessage.addListener (mesg)=> @onMessageQueue port, mesg
+    port.onDisconnect.addListener @onDisconnect
+
+  onMessageQueue: (port, mesg)=>
+    @messages.push {port: port, mesg: mesg}
+    @onMessage()
+    true
+
+  onMessage: =>
+    return setTimeout @onMessage, 100 if not @fetched
+    m = @messages.shift()
+    switch m.mesg.action
+      when 'page-load-note'
+      then @onPageLoadNote m.port, m.mesg
+      when 'page-save-note'
+      then @onPageSaveNote m.port, m.mesg
+      else return
+
+  onDisconnect: (port)=>
+    delete @ports[port.portId_]
 
   # injectPageApp: (tab)->
   #   return if not @isAllowed tab
@@ -65,54 +89,32 @@ class Background extends Spine.Controller
   # arrDel: (arr, value)->
   #   arr.splice(arr.indexOf(value), 1)
 
-  # isAllowed: (tab)->
-  #   allowed = false
-  #   allowed = true if tab.url.indexOf('http') is 0
-  #   allowed = true if tab.url.indexOf('https') is 0
-  #   allowed
+  postMessage: (port, mesg)->
+    port.postMessage mesg
 
-  sendMessage: (tabId, message, onRespond = ->)->
-    ChromeTabs.sendMessage tabId, message, onRespond
-
-  onMessageQueue: (request, sender, sendBack)=>
-    @messages.push {request: request, sender: sender, sendBack: sendBack}
-    @onMessage()
-    # The chrome.extension.onMessage listener must return true if you want to 
-    # send a response after the listener returns
-    true
-
-  onMessage: =>
-    return window.setTimeout @onMessage, 100 if not @fetched
-    ms = @messages.shift()
-    return if not ms.sender.tab
-    switch ms.request.action
-      when 'page-load-note'
-      then @onPageLoadNote ms.sender.tab, ms.request, ms.sendBack
-      when 'page-save-note'
-      then @onPageSaveNote ms.sender.tab, ms.request, ms.sendBack
-      else return
-
-  onPageLoadNote: (tab, request, respond)=>
+  onPageLoadNote: (port, mesg)=>
     # return @log 'tab', tab
-    id = MD5 request.url
+    id = MD5 mesg.url
     if NoteCouch.exists id
-      respond NoteCouch.find id
-      return NoteCouch.fetch id: id
+      NoteCouch.fetch id: id
+      note = NoteCouch.find id
     else
       now = new Date
-      respond NoteCouch.create
+      note = NoteCouch.create
         id: id
         title: tab.title
         content: ''
         url: request.url
-        time: now.getTime()
+        time: now.getTime()    
+    port.postMessage
+      action: 're-page-load-note'
+      note: note
 
-  onPageSaveNote: (tab, request, respond)=>
-    note = NoteCouch.find request.note.id
-    note.title = request.note.title
-    note.content = request.note.content
+  onPageSaveNote: (port, mesg)=>
+    note = NoteCouch.find mesg.note.id
+    note.title = mesg.note.title
+    note.content = mesg.note.content
     note.save()
-    respond 'saved'
 
   setTitle: (text)->
     BrowserAction.setTitle text
@@ -120,32 +122,14 @@ class Background extends Spine.Controller
   setBadge: (text)->
     BrowserAction.setBadge text
 
-  flashBadge: (text)->
-    onGet = (badge)=>
-      @setBadge text
-      @later => @setBadge badge,
-      500
-    BrowserAction.getBadge onGet
-
-  later: (func, milseconds)->
-    window.setTimeout func, milseconds
+  flashBadge: (flashText)->
+    milsecs = 500
+    BrowserAction.getBadge (text)=>
+      @setBadge flashText
+      setTimeout (=> @setBadge text), milsecs
 
   onClick: (tab)=>
-    # return if not @isAllowed(tab)
-    # return if @tabs[tab.id]
-    # @injectPageApp tab
-
-    # if tab.url is "chrome://extensions/" or 
-    # tab.url is "chrome://newtab/"
-    # then return
-    
-    # return if tab.url.indexOf('chrome') is 0
-
-    # console.log tab, @
-    # noteId = MD5 tab.url
-    # console.log noteId
-    # note = NoteCouch.exists noteId
-    # console.log note
+    # @log tab
 
   # onTabUpdate: (tabId, changeInfo, tab)=>
     # return if not @isAllowed(tab)
