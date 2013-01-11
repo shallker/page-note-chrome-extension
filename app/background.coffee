@@ -45,6 +45,7 @@ class Background extends Spine.Controller
 
   onUpdateNote: (note)=>
     # @log 'update', note
+    @flashBadge 'save'
 
   sendRefreshNote: (note)->
     mesg =
