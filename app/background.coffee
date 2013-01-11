@@ -108,6 +108,7 @@ class Background extends Spine.Controller
       note = NoteCouch.create
         id: id
         title: tab.title
+        page_title: tab.title
         content: ''
         url: mesg.url
         time: now.getTime()    

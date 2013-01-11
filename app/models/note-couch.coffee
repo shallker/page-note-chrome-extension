@@ -2,7 +2,7 @@ Spine = require('spine')
 require 'lib/spine/ajax'
 
 class Note extends Spine.Model
-  @configure 'Note', 'id', 'title', 'content', 'url', 'time', '_id', '_rev'
+  @configure 'Note', 'id', 'title', 'content', 'url', 'time', 'page_title', '_id', '_rev'
 
   @host: "http://shallker.iriscouch.com"
 
