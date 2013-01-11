@@ -43,7 +43,7 @@ Ajax =
 
 class Base
   defaults:
-    contentType: 'application/json'
+    contentType: 'application/json; charset=UTF-8'
     dataType: 'json'
     processData: false
     headers: {'X-Requested-With': 'XMLHttpRequest'}
