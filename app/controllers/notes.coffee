@@ -6,7 +6,8 @@ class Notes extends Spine.Controller
 
   url: ''
 
-  modified: false
+  closed: true
+  changed: false
 
   className: 'page-note-wrapper'
 
@@ -21,53 +22,55 @@ class Notes extends Spine.Controller
   constructor: (url)->
     super
     @url = url
-    @port = @connect @url
     @append @render()
-    @loadNote()
-
-  start: =>
-    @fill @note
-    @enable()
+    @connect()
 
   fill: (note)->
     @title.val note.title
     @content.val note.content
 
-  loadNote: ->
+  refresh: ->
+    @disable()
+    @fill @note
+    @enable()
+
+  mesgLoadNote: ->
     @postMessage
       action: 'page-load-note'
       url: @url
 
-  onLoadNote: (note)=>
-    @note = note
-    @start()
-
-  onRefreshNote: (note)=>
-    return if note.id isnt @note.id
-    @note = note
-    @fill @note
+  mesgSaveNote: ->
+    @postMessage
+      action: 'page-save-note'
+      note: @note
 
   render: ->
     @template = require('views/notes')()
 
-  connect: (name)->
-    port = ChromeExtension.connect name
-    port.onMessage.addListener @onMessage
-    port
+  connect: ->
+    @port = ChromeExtension.connect name: @url
+    @port.onMessage.addListener @onMessage
 
   postMessage: (msg)->
     @port.postMessage msg
 
-  onMessage: (msg)=>
-    # @log 'onMessage', msg
-    switch msg.action
+  onMessage: (mesg)=>
+    switch mesg.action
       when 're-page-load-note'
-      then @onLoadNote msg.note
+      then @onMesgLoadNote mesg
       when 're-page-save-note'
-      then ''
+      then @onMesgSaveNote mesg
       when 'refresh-note'
-      then @onRefreshNote msg.note
+      then @onMesgRefreshNote mesg
       else return
+
+  close: ->
+    @closed = true
+    @mesgSaveNote() if @changed
+
+  open: ->
+    @closed = false
+    @mesgLoadNote()
 
   disable: ->
     @title.prop 'disabled', true
@@ -77,13 +80,24 @@ class Notes extends Spine.Controller
     @title.prop 'disabled', false
     @content.prop 'disabled', false
 
+  onMesgLoadNote: (mesg)=>
+    @note = mesg.note
+    @refresh()
+
+  onMesgSaveNote: (mesg)=>
+    # mesg.result
+
+  onMesgRefreshNote: (mesg)=>
+    return if mesg.note.id isnt @note.id
+    @note = mesg.note
+    @refresh()
+
   onTitleChange: (ev)=>
     @note.title = @title.val()
-    @modified = true
-
+    @changed = true
+    
   onContentChange: (ev)=>
     @note.content = @content.val()
-    @modified = true
-
+    @changed = true
 
 module.exports = Notes

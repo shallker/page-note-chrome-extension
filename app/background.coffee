@@ -16,16 +16,18 @@ class Background extends Spine.Controller
   ports: {}
   fetched: false
   messages: []
+  badges: []
 
   setInterval = (func, secs)-> window.setInterval func, secs
   setTimeout = (func, secs)-> window.setTimeout func, secs
+  clearTimeout = (tid)-> window.clearTimeout tid
 
   constructor: ->
     super
     @listen()
     NoteCouch.fetch()
-    NoteCouch.bind "refresh", @onRefreshNotes
-    NoteCouch.bind "update", @onUpdateNote
+    NoteCouch.bind "refresh", @onNoteRefresh
+    NoteCouch.bind "update", @onNoteUpdate
 
   # run: ->
     # setInterval @onRun, 1000*60*3
@@ -37,17 +39,17 @@ class Background extends Spine.Controller
     BrowserAction.listenClick @onClick
     ChromeExtension.listenConnect @onConnect
 
-  onRefreshNotes: (notes)=>
+  onNoteRefresh: (notes)=>
     @log 'refresh', notes
     @fetched = true
     @flashBadge 'load'
-    @sendRefreshNote note for note in notes
+    @mesgRefreshNote note for note in notes
 
-  onUpdateNote: (note)=>
-    # @log 'update', note
+  onNoteUpdate: (note)=>
+    @log 'update', note
     @flashBadge 'save'
 
-  sendRefreshNote: (note)->
+  mesgRefreshNote: (note)->
     mesg =
       action: 'refresh-note'
       note: note
@@ -70,9 +72,9 @@ class Background extends Spine.Controller
     m = @messages.shift()
     switch m.mesg.action
       when 'page-load-note'
-      then @onPageLoadNote m.port, m.mesg
+      then @onMesgPageLoadNote m.port, m.mesg
       when 'page-save-note'
-      then @onPageSaveNote m.port, m.mesg
+      then @onMesgPageSaveNote m.port, m.mesg
       else return
 
   onDisconnect: (port)=>
@@ -98,7 +100,7 @@ class Background extends Spine.Controller
   postMessage: (port, mesg)->
     port.postMessage mesg
 
-  onPageLoadNote: (port, mesg)=>
+  onMesgPageLoadNote: (port, mesg)=>
     id = MD5 mesg.url
     NoteCouch.fetch id: id
     if NoteCouch.exists id
@@ -117,7 +119,7 @@ class Background extends Spine.Controller
       action: 're-page-load-note'
       note: note
 
-  onPageSaveNote: (port, mesg)=>
+  onMesgPageSaveNote: (port, mesg)=>
     note = NoteCouch.find mesg.note.id
     note.title = mesg.note.title
     note.content = mesg.note.content
@@ -130,10 +132,21 @@ class Background extends Spine.Controller
     BrowserAction.setBadge text
 
   flashBadge: (flashText)->
-    milsecs = 500
-    BrowserAction.getBadge (text)=>
+    flashMilsecs = 500
+    if @flashing
+      clearTimeout @recovering
       @setBadge flashText
-      setTimeout (=> @setBadge text), milsecs
+      @recovering = setTimeout @clearFlashing, flashMilsecs
+    else
+      BrowserAction.getBadge (text)=>
+        @badge = text
+        @setBadge flashText
+        @recovering = setTimeout @clearFlashing, flashMilsecs
+    @flashing = true
+
+  clearFlashing: =>
+    @setBadge @badge
+    @flashing = false
 
   onClick: (tab)=>
     @log 'onClick', tab

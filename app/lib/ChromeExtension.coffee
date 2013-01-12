@@ -16,8 +16,9 @@ class ChromeExtension
     port.postMessage msg
     port.onMessage.addListener call
 
-  @connect: (name = '')->
-    chrome.extension.connect name: name
+  # options = name: ''
+  @connect: (options = {})->
+    chrome.extension.connect options
     
   # onMessage = (request, sender, sendResponse)->
   @listenMessage: (onMessage)->

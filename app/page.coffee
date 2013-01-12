@@ -1,69 +1,58 @@
-require('lib/setup')
+require 'lib/setup'
 Mousetrap = require 'lib/mousetrap'
 ChromeExtension = require 'lib/ChromeExtension'
 
-Spine = require('spine')
+Spine = require 'spine'
 Notes = require 'controllers/notes'
 
 html = document.documentElement
-body = document.body
 
 class Page extends Spine.Controller
 
-  className: 'page-note-app'
+  location = window.location
 
-  elements:
-    '.page-note-container'
+  setTimeout = (func, milsecs)->
+    window.setTimeout func, milsecs
+
+  clearTimeout = (tid)->
+    window.clearTimeout tid
+
+  el: document.body
 
   constructor: ->
     super
-    $('body').append @el
-    @url = @getURL()
-    @port = @connect @url
+    @url = @getURL location
+    @notes = new Notes @url
     @listenKeys()
 
-  getURL: ->
-    loc = window.location
+  getURL: (loc)->
     url = loc.origin + loc.pathname + loc.search
     # trim last backslash /
     url = url.replace(/\/$/g, "")
 
-  connect: (name)->
-    ChromeExtension.connect name
-
-  postMessage: (mesg)->
-    @port.postMessage mesg
-
   listenKeys: ->
     Mousetrap.bind '`', @onTogglePageNote
 
-  saveNote: (note)->
-    mesg =
-      action: 'page-save-note'
-      note: note
-    @postMessage mesg
-
   closeNotes: ->
     $(html).removeClass 'page-note-open'
-    @saveNote @notes.note if @notes.modified
-    delete @notes
+    @notes.close()
     @clearDocument()
 
   openNotes: ->
-    @notes = new Notes(@url)
-    @html @notes
+    @append @notes if not @noteAppended
+    @notes.open()
     $(html).addClass 'page-note-init'
     $(html).addClass 'page-note-open'
-    window.clearTimeout @clearing
+    clearTimeout @clearing
 
   removeHtmlClass: =>
     return if $(html).hasClass('page-note-open')
     $(html).removeClass 'page-note-init'
     
   clearDocument: ->
-    @clearing = window.setTimeout @removeHtmlClass, 1000
+    @clearing = setTimeout @removeHtmlClass, 1000
 
   onTogglePageNote: (ev)=>
-    if @notes then @closeNotes() else @openNotes()
+    if @notes.closed then @openNotes() else @closeNotes()
 
 module.exports = Page
