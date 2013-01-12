@@ -52,8 +52,12 @@ class Page extends Spine.Controller
     @notes.close()
     @clearDocument()
 
+  appendNotes: (notes)->
+    @append notes
+    @isNotesAppended = true
+
   openNotes: ->
-    @append @notes if not @noteAppended
+    @appendNotes @notes if not @isNotesAppended
     @notes.open()
     $(html).addClass 'page-note-init'
     $(html).addClass 'page-note-open'
