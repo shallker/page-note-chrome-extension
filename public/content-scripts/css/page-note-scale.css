@@ -40,16 +40,18 @@ body {
   /*-webkit-transition: 0.2s all cubic-bezier(0.250, 0.460, 0.450, 0.940);*/
 }
 
-.page-note-open .page-note {
+.page-note-open #page-note {
   /*opacity: 1;*/
   /*-webkit-transform: translateX(-100%);*/
   /*-webkit-transform: translateX(-100%) rotateY(0deg);*/
+  left: 20%;
 }
 
 #page-note {
+  -webkit-transition: 0.2s left cubic-bezier(0.250, 0.460, 0.450, 0.940);
   background-color: rgb(245, 245, 245);
-  position: absolute;
-  width: 25%;
+  position: fixed;
+  width: 20%;
   height: 100%;
   z-index: -1;
   left: 0;
