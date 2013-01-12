@@ -53,7 +53,7 @@ class Background extends Spine.Controller
     mesg =
       action: 'refresh-note'
       note: note
-    @postMessage port, mesg for pid, port of @ports
+    port.postMessage mesg for pid, port of @ports
 
   onConnect: (port)=>
     # @log 'onConnect', port
@@ -97,8 +97,8 @@ class Background extends Spine.Controller
   # arrDel: (arr, value)->
   #   arr.splice(arr.indexOf(value), 1)
 
-  postMessage: (port, mesg)->
-    port.postMessage mesg
+  postMessage: (mesg)->
+    port.postMessage mesg for pid, port of @ports
 
   onMesgPageLoadNote: (port, mesg)=>
     id = MD5 mesg.url
@@ -149,7 +149,8 @@ class Background extends Spine.Controller
     @flashing = false
 
   onClick: (tab)=>
-    @log 'onClick', tab
+    # @log 'onClick', tab
+    @postMessage action: 'toggle-page-note'
     # @injectPageApp tab
 
   # onTabUpdate: (tabId, changeInfo, tab)=>

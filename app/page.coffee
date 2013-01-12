@@ -22,6 +22,7 @@ class Page extends Spine.Controller
   constructor: ->
     super
     @url = @getURL location
+    @connect()
     @notes = new Notes @url
     @listenKeys()
 
@@ -29,6 +30,19 @@ class Page extends Spine.Controller
     url = loc.origin + loc.pathname + loc.search
     # trim last backslash /
     url = url.replace(/\/$/g, "")
+
+  connect: ->
+    @port = ChromeExtension.connect name: @url
+    @port.onMessage.addListener @onMessage
+
+  onMessage: (mesg)=>
+    switch mesg.action
+      when 'toggle-page-note'
+      then @onMesgTogglePageNote mesg
+      else return
+
+  onMesgTogglePageNote: (mesg)=>
+    @onTogglePageNote()
 
   listenKeys: ->
     Mousetrap.bind '`', @onTogglePageNote
